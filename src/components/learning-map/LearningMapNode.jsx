@@ -88,7 +88,6 @@ export default function LearningMapNode({
   };
 
   const style = stateStyles[state] || stateStyles.locked;
-  const isClickable = true; // All nodes clickable so user can preview locked content or review completed
 
   return (
     <div className="flex flex-col items-center my-4 group relative">

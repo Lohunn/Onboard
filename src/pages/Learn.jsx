@@ -14,7 +14,7 @@ import { Cpu } from 'lucide-react';
 
 export default function Learn() {
   const navigate = useNavigate();
-  const { completedLessonIds, unlockedModuleIds, setActiveLesson } = useLearnerStore();
+  const { completedLessonIds, setActiveLesson } = useLearnerStore();
 
   const [selectedModule, setSelectedModule] = useState(null);
 
@@ -34,15 +34,14 @@ export default function Learn() {
   }, [completedLessonIds]);
 
   // Handle lesson start
-  const handleStartLesson = (lesson, module) => {
+  const handleStartLesson = (lesson) => {
     setActiveLesson(lesson.id);
     setSelectedModule(null);
 
     if (lesson.experimentId) {
       navigate(`/lab?experiment=${lesson.experimentId}`);
     } else {
-      // In Prompt 3 we implement the full Lesson Player page
-      navigate(`/lab?lesson=${lesson.id}`);
+      navigate(`/lessons/${lesson.id}`);
     }
   };
 

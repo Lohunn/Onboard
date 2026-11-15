@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "oxlint",
     "test:curriculum": "node tests/curriculum.test.js",
+    "test:lessons": "node tests/lessonEngine.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
