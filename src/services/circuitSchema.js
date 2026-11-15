@@ -267,7 +267,8 @@ export function validateCircuitDocument(doc) {
   if (!Array.isArray(doc.connections)) {
     errors.push('connections must be an array');
   } else {
-    const instanceIdSet = new Set((doc.instances || []).map((i) => i.id));
+    const validInstances = Array.isArray(doc.instances) ? doc.instances : [];
+    const instanceIdSet = new Set(validInstances.map((i) => i.id));
     const connIds = new Set();
 
     for (const conn of doc.connections) {
@@ -297,9 +298,10 @@ export function validateCircuitDocument(doc) {
 
   // Safety Rules for ESP32
   if (Array.isArray(doc.connections)) {
+    const validInstances = Array.isArray(doc.instances) ? doc.instances : [];
     for (const conn of doc.connections) {
-      const fromInst = (doc.instances || []).find((i) => i.id === conn.from?.instanceId);
-      const toInst = (doc.instances || []).find((i) => i.id === conn.to?.instanceId);
+      const fromInst = validInstances.find((i) => i.id === conn.from?.instanceId);
+      const toInst = validInstances.find((i) => i.id === conn.to?.instanceId);
 
       // Check for direct GPIO-to-LED without resistor (best-effort topology check)
       if (fromInst?.componentTypeId === 'esp32-devkit-v1' && toInst?.componentTypeId?.startsWith('led-')) {

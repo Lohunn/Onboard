@@ -16,6 +16,8 @@
     "test:button": "node tests/buttonExperiment.test.js",
     "test:mentor": "node tests/mentorService.test.js",
     "test:capstone": "node tests/smartIndicator.test.js",
+    "test:hardening": "node tests/hardeningReview.test.js",
+    "test:all": "npm run test:curriculum && npm run test:lessons && npm run test:gamification && npm run test:board && npm run test:circuit && npm run test:sim && npm run test:button && npm run test:mentor && npm run test:capstone && npm run test:hardening",
     "preview": "vite preview"
   },
   "dependencies": {
