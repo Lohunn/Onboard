@@ -23,6 +23,8 @@ import {
   Trash2,
   Box,
   Monitor,
+  CheckCircle2,
+  Circle,
 } from 'lucide-react';
 
 import { boards } from '../data/boards';
@@ -30,7 +32,8 @@ import { components } from '../data/components';
 import { experiments } from '../data/experiments';
 import Board3DViewer from '../components/3d/Board3DViewer';
 import {
-  runLedSimulation,
+  runSimulation,
+  parseFirmware,
   SIMULATION_DISCLAIMER,
 } from '../services/simulatorAdapter';
 
@@ -168,11 +171,36 @@ export default function VirtualLab() {
     [selectedBoardId]
   );
 
-  const [code, setCode] = useState(currentExp.starterCode);
-  const [activeTab, setActiveTab] = useState('explain'); // 'code' | 'explain' | 'serial'
+  const [code, setCode] = useState(() => {
+    return (
+      localStorage.getItem(`onboard-code-draft-${currentExp.id}`) ||
+      currentExp.starterCode
+    );
+  });
+  const [isButtonPressed, setIsButtonPressed] = useState(false);
+  const [activeTab, setActiveTab] = useState('code'); // 'code' | 'explain' | 'serial'
   const [canvasMode, setCanvasMode] = useState('canvas'); // 'canvas' | '3d'
   const [componentSearch, setComponentSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const handleCodeChange = (newVal) => {
+    const val = newVal || '';
+    setCode(val);
+    try {
+      localStorage.setItem(`onboard-code-draft-${currentExp.id}`, val);
+    } catch {
+      // ignore storage quota issues
+    }
+  };
+
+  const handleResetCode = () => {
+    setCode(currentExp.starterCode);
+    try {
+      localStorage.removeItem(`onboard-code-draft-${currentExp.id}`);
+    } catch {
+      // ignore
+    }
+  };
 
   // Simulation State
   const [simState, setSimState] = useState('stopped');
@@ -252,9 +280,10 @@ export default function VirtualLab() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-const handleStopSimulation = useCallback(() => {
+  const handleStopSimulation = useCallback(() => {
     setSimState('stopped');
     setSimLedState(false);
+    setIsButtonPressed(false);
     setNodes((nds) =>
       nds.map((n) => {
         if (n.id === 'component-node-1') {
@@ -265,40 +294,100 @@ const handleStopSimulation = useCallback(() => {
     );
   }, [setNodes]);
 
+  const handleButtonDown = useCallback(() => {
+    if (simState !== 'running') return;
+    setIsButtonPressed(true);
+    setSimLedState(true);
+    const timestamp = new Date().toISOString().split('T')[1].slice(0, 8);
+    setNodes((nds) =>
+      nds.map((n) => {
+        if (n.id === 'component-node-1') {
+          return { ...n, data: { ...n.data, value: true } };
+        }
+        return n;
+      })
+    );
+    setSerialLogs((prev) => [
+      `[${timestamp}] GPIO 4: LOW (0.0V) -> Button PRESSED -> LED ON (5.9mA)`,
+      ...prev.slice(0, 40),
+    ]);
+  }, [simState, setNodes]);
+
+  const handleButtonUp = useCallback(() => {
+    if (simState !== 'running') return;
+    setIsButtonPressed(false);
+    setSimLedState(false);
+    const timestamp = new Date().toISOString().split('T')[1].slice(0, 8);
+    setNodes((nds) =>
+      nds.map((n) => {
+        if (n.id === 'component-node-1') {
+          return { ...n, data: { ...n.data, value: false } };
+        }
+        return n;
+      })
+    );
+    setSerialLogs((prev) => [
+      `[${timestamp}] GPIO 4: HIGH (3.3V) -> Button RELEASED -> LED OFF`,
+      ...prev.slice(0, 40),
+    ]);
+  }, [simState, setNodes]);
+
   const handleStartSimulation = useCallback(() => {
-    // Run deterministic educational simulator adapter
-    const dummyCircuit = {
+    // Construct circuit topology for active experiment
+    const isButtonExp = currentExp.id === 'exp-02-button';
+
+    const instances = [
+      { id: 'esp32-main', componentTypeId: 'esp32-devkit-v1' },
+      { id: 'resistor-main', componentTypeId: 'resistor-220' },
+      { id: 'led-main', componentTypeId: 'led-5mm-red' },
+    ];
+
+    const connections = [
+      {
+        id: 'c1',
+        from: { componentInstanceId: 'esp32-main', terminalId: 'd2' },
+        to: { componentInstanceId: 'resistor-main', terminalId: 'pin1' },
+      },
+      {
+        id: 'c2',
+        from: { componentInstanceId: 'resistor-main', terminalId: 'pin2' },
+        to: { componentInstanceId: 'led-main', terminalId: 'anode' },
+      },
+      {
+        id: 'c3',
+        from: { componentInstanceId: 'led-main', terminalId: 'cathode' },
+        to: { componentInstanceId: 'esp32-main', terminalId: 'gnd-14' },
+      },
+    ];
+
+    if (isButtonExp) {
+      instances.push({ id: 'button-main', componentTypeId: 'push-button' });
+      connections.push(
+        {
+          id: 'c4',
+          from: { componentInstanceId: 'esp32-main', terminalId: 'd4' },
+          to: { componentInstanceId: 'button-main', terminalId: 'pin1a' },
+        },
+        {
+          id: 'c5',
+          from: { componentInstanceId: 'button-main', terminalId: 'pin2a' },
+          to: { componentInstanceId: 'esp32-main', terminalId: 'gnd-29' },
+        }
+      );
+    }
+
+    const testCircuit = {
       schemaVersion: 1,
       boardId: selectedBoard.id,
-      instances: [
-        { id: 'esp32-main', componentTypeId: 'esp32-devkit-v1' },
-        { id: 'resistor-main', componentTypeId: 'resistor-220' },
-        { id: 'led-main', componentTypeId: 'led-5mm-red' },
-      ],
-      connections: [
-        {
-          id: 'c1',
-          from: { componentInstanceId: 'esp32-main', terminalId: 'd2' },
-          to: { componentInstanceId: 'resistor-main', terminalId: 'pin1' },
-        },
-        {
-          id: 'c2',
-          from: { componentInstanceId: 'resistor-main', terminalId: 'pin2' },
-          to: { componentInstanceId: 'led-main', terminalId: 'anode' },
-        },
-        {
-          id: 'c3',
-          from: { componentInstanceId: 'led-main', terminalId: 'cathode' },
-          to: { componentInstanceId: 'esp32-main', terminalId: 'gnd-14' },
-        },
-      ],
+      instances,
+      connections,
     };
 
-    const simResult = runLedSimulation({
+    const simResult = runSimulation({
       experimentId: currentExp.id,
-      circuit: dummyCircuit,
+      circuit: testCircuit,
       code,
-      options: { stepCount: 20, timeStepMs: 1000 },
+      options: { stepCount: 20, timeStepMs: 500 },
     });
 
     setSimDiagnostics(simResult.diagnostics || []);
@@ -319,7 +408,9 @@ const handleStopSimulation = useCallback(() => {
     setSimState('running');
     setSerialLogs((prev) => [
       `[SIMULATOR]: ${SIMULATION_DISCLAIMER}`,
-      `[SIMULATOR]: Verified circuit topology: ${simResult.summary.drivingPin?.toUpperCase()} -> 220Ω Resistor -> LED -> GND.`,
+      isButtonExp
+        ? `[SIMULATOR]: Ready! Hold down the hardware button widget to toggle LED on GPIO 2.`
+        : `[SIMULATOR]: Verified circuit topology: ${simResult.summary.drivingPin?.toUpperCase()} -> 220-Ohm Resistor -> LED -> GND.`,
       ...prev,
     ]);
   }, [currentExp.id, selectedBoard.id, code]);
@@ -361,8 +452,10 @@ const handleStopSimulation = useCallback(() => {
   const loadExperiment = (exp) => {
     setCurrentExp(exp);
     setSelectedBoardId(exp.boardId);
-    setCode(exp.starterCode);
+    const draft = localStorage.getItem(`onboard-code-draft-${exp.id}`);
+    setCode(draft || exp.starterCode);
     handleStopSimulation();
+    setIsButtonPressed(false);
     setSimDiagnostics([]);
     setEvidenceToken(null);
     setSerialLogs([`[LAB READY]: Loaded ${exp.title}. Click RUN to start simulation.`]);
@@ -496,6 +589,30 @@ const handleStopSimulation = useCallback(() => {
               {simState === 'running' ? 'Running' : 'Halted'}
             </span>
           </div>
+
+          {currentExp.id === 'exp-02-button' && (
+            <div className="flex items-center gap-2 px-2.5 py-1 bg-[#18213D] text-[#FAF4E9] rounded-[7px] border border-[#34436A]">
+              <span className="text-[11px] font-['Barlow_Semi_Condensed'] uppercase tracking-wider font-semibold text-[#E3D8CA]">
+                Input:
+              </span>
+              <button
+                onMouseDown={handleButtonDown}
+                onMouseUp={handleButtonUp}
+                onTouchStart={handleButtonDown}
+                onTouchEnd={handleButtonUp}
+                disabled={simState !== 'running'}
+                className={`px-3 py-1 rounded-[5px] font-['Barlow_Semi_Condensed'] text-xs font-bold transition-all select-none ${
+                  simState !== 'running'
+                    ? 'opacity-40 cursor-not-allowed bg-[#4B505C]'
+                    : isButtonPressed
+                    ? 'bg-[#C0652D] text-white scale-95 shadow-inner'
+                    : 'bg-[#2A56A3] hover:bg-[#3468bf] text-white shadow-sm'
+                }`}
+              >
+                {isButtonPressed ? '🔴 BUTTON HELD (LOW)' : '🔘 PRESS & HOLD BUTTON'}
+              </button>
+            </div>
+          )}
 
           {/* Simulation Capability Level Indicator */}
           <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-[5px] bg-[#FAF4E9] border border-[#CEC0AD] text-[10px] font-['Barlow'] text-[#7A5A1E]">
@@ -756,36 +873,137 @@ const handleStopSimulation = useCallback(() => {
             </button>
           </div>
 
-          {/* TAB 1: Monaco Code Editor */}
-          {activeTab === 'code' && (
-            <div className="flex-1 flex flex-col">
-              <div className="p-2 bg-[#FAF4E9] border-b border-[#CEC0AD] flex justify-between items-center text-xs">
-                <span className="font-['JetBrains_Mono'] text-[11px] text-[#5C6066]">
-                  sketch.ino (C++ / Arduino)
-                </span>
-                <span className="text-[10px] text-[#2A56A3] font-semibold">
-                  Board: {selectedBoard.shortName}
-                </span>
+          {/* TAB 1: Monaco Code Editor with Guided Tasks & Persisted Drafts */}
+          {activeTab === 'code' && (() => {
+            const parsed = parseFirmware(code);
+            const isButtonExp = currentExp.id === 'exp-02-button';
+
+            const tasks = isButtonExp
+              ? [
+                  {
+                    title: 'Configure Button Pin Mode',
+                    done: parsed.pinModes[4] === 'INPUT_PULLUP',
+                    hint: 'pinMode(BUTTON_PIN, INPUT_PULLUP);',
+                  },
+                  {
+                    title: 'Sample Input with digitalRead',
+                    done: parsed.digitalReads.includes(4),
+                    hint: 'int buttonState = digitalRead(BUTTON_PIN);',
+                  },
+                  {
+                    title: 'Active-Low Branch Condition',
+                    done: parsed.conditionalLogic.hasIfCheck && parsed.conditionalLogic.checksLow,
+                    hint: 'if (buttonState == LOW) { ... }',
+                  },
+                  {
+                    title: 'Drive LED Output',
+                    done: parsed.pinModes[2] === 'OUTPUT' && parsed.operations.some(op => op.pin === 2),
+                    hint: 'digitalWrite(LED_PIN, HIGH);',
+                  },
+                ]
+              : [
+                  {
+                    title: 'Configure GPIO 2 as OUTPUT',
+                    done: parsed.pinModes[2] === 'OUTPUT',
+                    hint: 'pinMode(LED_PIN, OUTPUT);',
+                  },
+                  {
+                    title: 'Write Digital HIGH & LOW',
+                    done: parsed.operations.some(op => op.pin === 2 && op.value === 'HIGH') &&
+                          parsed.operations.some(op => op.pin === 2 && op.value === 'LOW'),
+                    hint: 'digitalWrite(LED_PIN, HIGH); ... digitalWrite(LED_PIN, LOW);',
+                  },
+                  {
+                    title: 'Timing Delay Intervals',
+                    done: parsed.delays.length >= 2,
+                    hint: 'delay(500);',
+                  },
+                ];
+
+            return (
+              <div className="flex-1 flex flex-col">
+                {/* Editor Header */}
+                <div className="p-2 bg-[#FAF4E9] border-b border-[#CEC0AD] flex justify-between items-center text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="font-['JetBrains_Mono'] text-[11px] text-[#5C6066]">
+                      sketch.ino
+                    </span>
+                    <span className="text-[10px] text-[#057A55] font-semibold bg-[#057A55]/10 px-1.5 py-0.5 rounded">
+                      Draft Saved ✓
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleResetCode}
+                      className="inline-flex items-center gap-1 text-[11px] font-['Barlow'] font-semibold text-[#5C6066] hover:text-[#C0652D] px-2 py-0.5 rounded hover:bg-[#E3D8CA] transition-colors"
+                      title="Reset code to original starter template"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Reset Starter Code</span>
+                    </button>
+                    <span className="text-[10px] text-[#2A56A3] font-semibold">
+                      Board: {selectedBoard.shortName}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Monaco Editor Canvas */}
+                <div className="flex-1 min-h-[300px]">
+                  <Editor
+                    height="100%"
+                    defaultLanguage="cpp"
+                    value={code}
+                    onChange={handleCodeChange}
+                    theme="vs-light"
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 12,
+                      fontFamily: 'JetBrains Mono',
+                      lineNumbers: 'on',
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                    }}
+                  />
+                </div>
+
+                {/* Guided Firmware Tasks Panel */}
+                <div className="p-3 bg-[#FAF4E9] border-t border-[#CEC0AD]">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-['Barlow_Semi_Condensed'] text-xs font-bold uppercase tracking-wider text-[#18213D]">
+                      Guided Tasks for {currentExp.title}
+                    </span>
+                    <span className="text-[11px] font-['Barlow'] font-semibold text-[#5C6066]">
+                      {tasks.filter(t => t.done).length} / {tasks.length} Complete
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {tasks.map((task, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex items-start gap-2 p-1.5 rounded-[5px] border text-xs font-['Barlow'] ${
+                          task.done
+                            ? 'bg-[#057A55]/10 border-[#057A55]/30 text-[#057A55]'
+                            : 'bg-white/60 border-[#CEC0AD]/60 text-[#5C6066]'
+                        }`}
+                      >
+                        {task.done ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#057A55] shrink-0 mt-0.5" />
+                        ) : (
+                          <Circle className="w-3.5 h-3.5 text-[#AAA59D] shrink-0 mt-0.5" />
+                        )}
+                        <div className="min-w-0">
+                          <div className="font-semibold leading-tight">{task.title}</div>
+                          <div className="text-[10px] font-['JetBrains_Mono'] opacity-80 truncate">
+                            {task.hint}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="flex-1">
-                <Editor
-                  height="100%"
-                  defaultLanguage="cpp"
-                  value={code}
-                  onChange={(val) => setCode(val || '')}
-                  theme="vs-light"
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: 12,
-                    fontFamily: 'JetBrains Mono',
-                    lineNumbers: 'on',
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true,
-                  }}
-                />
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* TAB 2: Explain Mode */}
           {activeTab === 'explain' && (
