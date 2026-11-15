@@ -29,6 +29,10 @@ import { boards } from '../data/boards';
 import { components } from '../data/components';
 import { experiments } from '../data/experiments';
 import Board3DViewer from '../components/3d/Board3DViewer';
+import {
+  runLedSimulation,
+  SIMULATION_DISCLAIMER,
+} from '../services/simulatorAdapter';
 
 // Photorealistic Microcontroller Node using @wokwi/elements
 function WokwiBoardNode({ data }) {
@@ -174,6 +178,8 @@ export default function VirtualLab() {
   const [simState, setSimState] = useState('stopped');
   const [simLedState, setSimLedState] = useState(false);
   const [serialLogs, setSerialLogs] = useState([]);
+  const [simDiagnostics, setSimDiagnostics] = useState([]);
+  const [evidenceToken, setEvidenceToken] = useState(null);
   const [selectedExplainItem, setSelectedExplainItem] = useState(null);
 
   // Setup Initial Nodes with photorealistic hardware
@@ -246,6 +252,78 @@ export default function VirtualLab() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+const handleStopSimulation = useCallback(() => {
+    setSimState('stopped');
+    setSimLedState(false);
+    setNodes((nds) =>
+      nds.map((n) => {
+        if (n.id === 'component-node-1') {
+          return { ...n, data: { ...n.data, value: false } };
+        }
+        return n;
+      })
+    );
+  }, [setNodes]);
+
+  const handleStartSimulation = useCallback(() => {
+    // Run deterministic educational simulator adapter
+    const dummyCircuit = {
+      schemaVersion: 1,
+      boardId: selectedBoard.id,
+      instances: [
+        { id: 'esp32-main', componentTypeId: 'esp32-devkit-v1' },
+        { id: 'resistor-main', componentTypeId: 'resistor-220' },
+        { id: 'led-main', componentTypeId: 'led-5mm-red' },
+      ],
+      connections: [
+        {
+          id: 'c1',
+          from: { componentInstanceId: 'esp32-main', terminalId: 'd2' },
+          to: { componentInstanceId: 'resistor-main', terminalId: 'pin1' },
+        },
+        {
+          id: 'c2',
+          from: { componentInstanceId: 'resistor-main', terminalId: 'pin2' },
+          to: { componentInstanceId: 'led-main', terminalId: 'anode' },
+        },
+        {
+          id: 'c3',
+          from: { componentInstanceId: 'led-main', terminalId: 'cathode' },
+          to: { componentInstanceId: 'esp32-main', terminalId: 'gnd-14' },
+        },
+      ],
+    };
+
+    const simResult = runLedSimulation({
+      experimentId: currentExp.id,
+      circuit: dummyCircuit,
+      code,
+      options: { stepCount: 20, timeStepMs: 1000 },
+    });
+
+    setSimDiagnostics(simResult.diagnostics || []);
+    if (simResult.evidenceToken) {
+      setEvidenceToken(simResult.evidenceToken);
+    }
+
+    if (simResult.diagnostics.some((d) => d.severity === 'error')) {
+      const firstError = simResult.diagnostics.find((d) => d.severity === 'error');
+      setSerialLogs((prev) => [
+        `[SIMULATOR ERROR]: ${firstError.message}`,
+        `[SUGGESTION]: ${firstError.suggestion}`,
+        ...prev,
+      ]);
+      return;
+    }
+
+    setSimState('running');
+    setSerialLogs((prev) => [
+      `[SIMULATOR]: ${SIMULATION_DISCLAIMER}`,
+      `[SIMULATOR]: Verified circuit topology: ${simResult.summary.drivingPin?.toUpperCase()} -> 220Ω Resistor -> LED -> GND.`,
+      ...prev,
+    ]);
+  }, [currentExp.id, selectedBoard.id, code]);
+
   const nodeTypes = useMemo(
     () => ({
       wokwiBoard: WokwiBoardNode,
@@ -284,8 +362,9 @@ export default function VirtualLab() {
     setCurrentExp(exp);
     setSelectedBoardId(exp.boardId);
     setCode(exp.starterCode);
-    setSimState('stopped');
-    setSimLedState(false);
+    handleStopSimulation();
+    setSimDiagnostics([]);
+    setEvidenceToken(null);
     setSerialLogs([`[LAB READY]: Loaded ${exp.title}. Click RUN to start simulation.`]);
   };
 
@@ -311,7 +390,7 @@ export default function VirtualLab() {
             })
           );
           setSerialLogs((prev) => [
-            `[${timestamp}] GPIO 2: ${isHigh ? 'HIGH (3.3V) -> LED ON' : 'LOW (0V) -> LED OFF'}`,
+            `[${timestamp}] GPIO 2: ${isHigh ? 'HIGH (3.3V) -> LED ON (5.9mA)' : 'LOW (0V) -> LED OFF'}`,
             ...prev.slice(0, 40),
           ]);
         } else if (currentExp.id === 'exp-03-potentiometer') {
@@ -325,16 +404,6 @@ export default function VirtualLab() {
           setSerialLogs((prev) => [`[${timestamp}] Firmware cycle #${tick} ok`, ...prev.slice(0, 40)]);
         }
       }, 1000);
-    } else {
-      setSimLedState(false);
-      setNodes((nds) =>
-        nds.map((n) => {
-          if (n.id === 'component-node-1') {
-            return { ...n, data: { ...n.data, value: false } };
-          }
-          return n;
-        })
-      );
     }
     return () => clearInterval(interval);
   }, [simState, currentExp, setNodes]);
@@ -390,10 +459,7 @@ export default function VirtualLab() {
         <div className="flex items-center gap-2">
           {simState === 'stopped' ? (
             <button
-              onClick={() => {
-                setSimState('running');
-                setSerialLogs((prev) => ['[SIMULATOR]: Firmware execution started at 240MHz...', ...prev]);
-              }}
+              onClick={handleStartSimulation}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[6px] bg-[#057A55] hover:bg-[#046c4e] text-[#FAF4E9] font-['Barlow_Semi_Condensed'] font-bold text-xs shadow-xs transition-colors"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
@@ -401,10 +467,7 @@ export default function VirtualLab() {
             </button>
           ) : (
             <button
-              onClick={() => {
-                setSimState('stopped');
-                setSerialLogs((prev) => ['[SIMULATOR]: Simulation stopped.', ...prev]);
-              }}
+              onClick={handleStopSimulation}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[6px] bg-[#E02424] hover:bg-[#c81e1e] text-[#FAF4E9] font-['Barlow_Semi_Condensed'] font-bold text-xs shadow-xs transition-colors"
             >
               <Square className="w-3.5 h-3.5 fill-current" />
@@ -414,7 +477,7 @@ export default function VirtualLab() {
 
           <button
             onClick={() => {
-              setSimState('stopped');
+              handleStopSimulation();
               setSerialLogs(['[SIMULATOR]: Hardware reset executed.']);
             }}
             className="p-1.5 rounded-[6px] bg-[#E3D8CA] hover:bg-[#D6C7B3] text-[#18213D] text-xs font-semibold"
@@ -432,6 +495,12 @@ export default function VirtualLab() {
             <span className="font-['JetBrains_Mono'] text-[11px] text-[#5C6066] uppercase">
               {simState === 'running' ? 'Running' : 'Halted'}
             </span>
+          </div>
+
+          {/* Simulation Capability Level Indicator */}
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-[5px] bg-[#FAF4E9] border border-[#CEC0AD] text-[10px] font-['Barlow'] text-[#7A5A1E]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#C0652D]" />
+            <span>Deterministic Educational Simulation (ESP32)</span>
           </div>
         </div>
 
@@ -782,13 +851,51 @@ export default function VirtualLab() {
             <div className="flex-1 flex flex-col bg-[#18213D] text-[#FAF4E9] p-3 font-['JetBrains_Mono'] text-xs">
               <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#34436A] text-[11px] text-[#AAA59D]">
                 <span>Baud Rate: 115200 bps</span>
-                <button
-                  onClick={() => setSerialLogs([])}
-                  className="px-2 py-0.5 rounded bg-[#283656] text-[#FAF4E9] hover:bg-[#34436A]"
-                >
-                  Clear Console
-                </button>
+                <div className="flex items-center gap-2">
+                  {evidenceToken && (
+                    <span className="text-[10px] text-[#057A55] font-semibold bg-[#057A55]/20 px-2 py-0.5 rounded">
+                      Evidence Signed ✓
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setSerialLogs([])}
+                    className="px-2 py-0.5 rounded bg-[#283656] text-[#FAF4E9] hover:bg-[#34436A]"
+                  >
+                    Clear Console
+                  </button>
+                </div>
               </div>
+
+              {/* Structured Diagnostics Callout */}
+              {simDiagnostics.length > 0 && (
+                <div className="mb-3 space-y-1.5 font-['Barlow']">
+                  {simDiagnostics.map((diag, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-2 rounded-[6px] text-xs ${
+                        diag.severity === 'error'
+                          ? 'bg-[#E02424]/20 border border-[#E02424] text-[#FAF4E9]'
+                          : diag.severity === 'warning'
+                          ? 'bg-[#C0652D]/20 border border-[#C0652D] text-[#FAF4E9]'
+                          : 'bg-[#2A56A3]/20 border border-[#2A56A3] text-[#FAF4E9]'
+                      }`}
+                    >
+                      <div className="font-bold flex items-center gap-1.5">
+                        <span className="uppercase text-[10px] px-1 py-0.2 rounded bg-black/40">
+                          {diag.severity}
+                        </span>
+                        <span>{diag.code}</span>
+                      </div>
+                      <div className="mt-0.5 text-[11px] opacity-90">{diag.message}</div>
+                      {diag.suggestion && (
+                        <div className="mt-1 text-[11px] text-[#FAF4E9]/80 italic">
+                          💡 Suggestion: {diag.suggestion}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="flex-1 overflow-y-auto space-y-1 font-['JetBrains_Mono'] text-xs text-[#057A55]">
                 {serialLogs.length === 0 ? (

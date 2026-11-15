@@ -12,6 +12,7 @@
     "test:gamification": "node tests/gamification.test.js",
     "test:board": "node tests/esp32Explorer.test.js",
     "test:circuit": "node tests/circuitSchema.test.js",
+    "test:sim": "node tests/simulatorAdapter.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
