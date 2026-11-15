@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Play, Sparkles, Cpu, Zap, Activity } from 'lucide-react';
+import { ChevronRight, Zap, Activity } from 'lucide-react';
 
 export default function HeroSection() {
   return (

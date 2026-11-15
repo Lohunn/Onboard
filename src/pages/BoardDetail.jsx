@@ -172,10 +172,9 @@ function BoardHero({ board }) {
  * @param {{ board: import('../data/boards').Board }} props
  */
 function SpecsGrid({ board }) {
-  if (!board.specs) return null;
-
   /** Convert specs object to displayable key-value pairs. */
   const specEntries = useMemo(() => {
+    if (!board.specs) return [];
     const entries = [];
     const specs = board.specs;
     if (specs.processor) entries.push({ label: 'Processor', value: specs.processor });
@@ -193,6 +192,8 @@ function SpecsGrid({ board }) {
       });
     return entries;
   }, [board.specs]);
+
+  if (!board.specs || specEntries.length === 0) return null;
 
   return (
     <section className="mb-16">

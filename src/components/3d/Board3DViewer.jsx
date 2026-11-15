@@ -1,26 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { RotateCcw, Eye, Play, Sparkles, Layers, ZoomIn, ZoomOut } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 
 export default function Board3DViewer({
   boardId = 'esp32-devkit-v1',
   isSimulating = false,
   ledState = false,
-  onPinSelect = null,
 }) {
   const containerRef = useRef(null);
-  const [selectedPin, setSelectedPin] = useState(null);
   const [autoRotate, setAutoRotate] = useState(true);
-  const [cameraView, setCameraView] = useState('iso'); // 'iso' | 'top'
+  const autoRotateRef = useRef(autoRotate);
+
+  useEffect(() => {
+    autoRotateRef.current = autoRotate;
+  }, [autoRotate]);
 
   // References for Three.js objects
-  const sceneRef = useRef(null);
   const rendererRef = useRef(null);
   const cameraRef = useRef(null);
   const boardGroupRef = useRef(null);
   const ledMeshRef = useRef(null);
   const ledLightRef = useRef(null);
-  const pinsGroupRef = useRef(null);
 
   // Interaction dragging state
   const isDraggingRef = useRef(false);
@@ -337,7 +337,7 @@ export default function Board3DViewer({
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
-      if (autoRotate && !isDraggingRef.current) {
+      if (autoRotateRef.current && !isDraggingRef.current) {
         rotationRef.current.y += 0.005;
       }
 

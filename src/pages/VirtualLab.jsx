@@ -16,7 +16,6 @@ import {
   Square,
   RotateCcw,
   Cpu,
-  Layers,
   Terminal,
   Lightbulb,
   Search,
@@ -24,7 +23,6 @@ import {
   Trash2,
   Box,
   Monitor,
-  Sparkles,
 } from 'lucide-react';
 
 import { boards } from '../data/boards';

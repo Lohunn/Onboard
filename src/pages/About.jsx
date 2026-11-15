@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Cpu, Heart, Code2, ShieldAlert, Sparkles, Terminal } from 'lucide-react';
 
 export default function About() {
   return (

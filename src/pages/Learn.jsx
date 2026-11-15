@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { learningPaths } from '../data/learningPaths';
-import { BookOpen, Clock, ChevronDown, ChevronUp, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Clock, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
 
 export default function Learn() {
   const [expandedPath, setExpandedPath] = useState(learningPaths[0].id);

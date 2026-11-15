@@ -1,17 +1,31 @@
 import React, { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Menu, X, Cpu, ChevronRight, BookOpen, Layers, Terminal, Sparkles } from 'lucide-react';
+import {
+  Menu,
+  X,
+  Cpu,
+  ChevronRight,
+  Flame,
+  Zap,
+  Award,
+} from 'lucide-react';
+import { useLearnerStore } from '../store/useLearnerStore';
+import StatPill from './ui/StatPill';
 
 export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
+  const { xp, streakDays } = useLearnerStore();
+  const currentLevel = Math.floor(xp / 100) + 1;
+
   const navLinks = [
-    { label: 'Home', path: '/' },
     { label: 'Learn', path: '/learn' },
+    { label: 'Virtual Lab', path: '/lab' },
     { label: 'Boards', path: '/boards' },
     { label: 'Projects', path: '/projects' },
-    { label: 'About', path: '/about' },
+    { label: 'Achievements', path: '/achievements' },
+    { label: 'Profile', path: '/profile' },
   ];
 
   const isActive = (path) => {
@@ -23,9 +37,9 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col bg-[#F6EDDD] text-[#18213D]">
       {/* Top Navigation */}
       <header className="sticky top-0 z-50 bg-[#FAF4E9]/95 backdrop-blur-sm border-b border-[#CEC0AD]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
+          <Link to="/" className="flex items-center gap-2.5 group shrink-0">
             <div className="w-9 h-9 rounded-[7px] bg-[#18213D] flex items-center justify-center text-[#F6EDDD] shadow-sm group-hover:bg-[#2A56A3] transition-colors">
               <Cpu className="w-5 h-5 text-[#FAF4E9]" />
             </div>
@@ -34,7 +48,7 @@ export default function Layout() {
                 ONBOARD
               </span>
               <span className="font-['Barlow'] text-[10px] text-[#4B505C] uppercase tracking-wider -mt-1 font-semibold">
-                Virtual Microcontroller Lab
+                Zero-to-ESP32 Lab
               </span>
             </div>
           </Link>
@@ -47,7 +61,7 @@ export default function Layout() {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`px-3.5 py-1.5 rounded-[7px] text-sm font-['Barlow'] font-medium transition-all ${
+                  className={`px-3 py-1.5 rounded-[7px] text-sm font-['Barlow'] font-medium transition-all ${
                     active
                       ? 'bg-[#E3D8CA] text-[#18213D] font-semibold shadow-xs'
                       : 'text-[#4B505C] hover:text-[#18213D] hover:bg-[#F9F2E5]'
@@ -59,14 +73,35 @@ export default function Layout() {
             })}
           </nav>
 
-          {/* Header Action Button */}
-          <div className="hidden md:flex items-center gap-3">
-            <Link
-              to="/lab"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-[9px] bg-[#18213D] text-[#FAF4E9] font-['Barlow_Semi_Condensed'] font-semibold text-sm hover:bg-[#2A56A3] active:bg-[#18213D] transition-all shadow-sm"
-            >
-              <span>Enter Virtual Lab</span>
-              <ChevronRight className="w-4 h-4" />
+          {/* Gamification Stats Header Pills */}
+          <div className="hidden sm:flex items-center gap-2 shrink-0">
+            <Link to="/achievements">
+              <StatPill
+                icon={<Flame className="w-3.5 h-3.5 text-[#C0652D] fill-current" />}
+                value={streakDays}
+                label="Days"
+                variant="streak"
+                title="Current Streak"
+              />
+            </Link>
+
+            <Link to="/achievements">
+              <StatPill
+                icon={<Zap className="w-3.5 h-3.5 text-[#2A56A3] fill-current" />}
+                value={xp}
+                label="XP"
+                variant="xp"
+                title="Total XP Earned"
+              />
+            </Link>
+
+            <Link to="/profile">
+              <StatPill
+                icon={<Award className="w-3.5 h-3.5 text-[#057A55]" />}
+                value={`Lvl ${currentLevel}`}
+                variant="level"
+                title="Learner Level"
+              />
             </Link>
           </div>
 
@@ -82,7 +117,26 @@ export default function Layout() {
 
         {/* Mobile Dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-[#FAF4E9] border-b border-[#CEC0AD] px-4 pt-2 pb-6 space-y-2">
+          <div className="md:hidden bg-[#FAF4E9] border-b border-[#CEC0AD] px-4 pt-2 pb-6 space-y-3">
+            {/* Mobile Stat Pills */}
+            <div className="flex items-center gap-2 py-2 border-b border-[#CEC0AD]/40">
+              <StatPill
+                icon={<Flame className="w-3.5 h-3.5 text-[#C0652D] fill-current" />}
+                value={`${streakDays}d Streak`}
+                variant="streak"
+              />
+              <StatPill
+                icon={<Zap className="w-3.5 h-3.5 text-[#2A56A3] fill-current" />}
+                value={`${xp} XP`}
+                variant="xp"
+              />
+              <StatPill
+                icon={<Award className="w-3.5 h-3.5 text-[#057A55]" />}
+                value={`Lvl ${currentLevel}`}
+                variant="level"
+              />
+            </div>
+
             {navLinks.map((link) => (
               <Link
                 key={link.path}
@@ -130,31 +184,19 @@ export default function Layout() {
                 </span>
               </div>
               <p className="text-xs text-[#5C6066] leading-relaxed">
-                Interactive electronics learning platform and virtual microcontroller lab. Get onboard. Start building.
+                Beginner-first virtual electronics lab and physical computing curriculum. Understand before memorising.
               </p>
             </div>
 
             <div>
               <h4 className="font-['Barlow_Semi_Condensed'] text-xs font-bold uppercase tracking-wider text-[#18213D] mb-3">
-                Learning Paths
+                Curriculum Map
               </h4>
               <ul className="space-y-2 text-xs text-[#5C6066]">
-                <li><Link to="/learn" className="hover:text-[#2A56A3]">Microcontroller Foundations</Link></li>
-                <li><Link to="/learn" className="hover:text-[#2A56A3]">Sensors & Actuators</Link></li>
-                <li><Link to="/learn" className="hover:text-[#2A56A3]">Displays & Protocols</Link></li>
-                <li><Link to="/learn" className="hover:text-[#2A56A3]">IoT Foundations</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-['Barlow_Semi_Condensed'] text-xs font-bold uppercase tracking-wider text-[#18213D] mb-3">
-                Supported Boards
-              </h4>
-              <ul className="space-y-2 text-xs text-[#5C6066]">
-                <li><Link to="/boards/esp32-devkit-v1" className="hover:text-[#2A56A3]">ESP32 DevKit V1</Link></li>
-                <li><Link to="/boards/arduino-uno-r3" className="hover:text-[#2A56A3]">Arduino Uno R3</Link></li>
-                <li><Link to="/boards/raspberry-pi-pico" className="hover:text-[#2A56A3]">Raspberry Pi Pico</Link></li>
-                <li><Link to="/boards" className="hover:text-[#2A56A3]">Interactive Pinouts</Link></li>
+                <li><Link to="/learn" className="hover:text-[#2A56A3]">Module 0: Welcome to Building</Link></li>
+                <li><Link to="/learn" className="hover:text-[#2A56A3]">Module 1: Electricity Without Fear</Link></li>
+                <li><Link to="/learn" className="hover:text-[#2A56A3]">Module 4: First Output: LED Blink</Link></li>
+                <li><Link to="/learn" className="hover:text-[#2A56A3]">Module 9: Smart Indicator Mission</Link></li>
               </ul>
             </div>
 
@@ -164,15 +206,24 @@ export default function Layout() {
               </h4>
               <ul className="space-y-2 text-xs text-[#5C6066]">
                 <li><Link to="/lab" className="hover:text-[#2A56A3]">Circuit Workspace</Link></li>
-                <li><Link to="/projects" className="hover:text-[#2A56A3]">Beginner Projects</Link></li>
-                <li><Link to="/about" className="hover:text-[#2A56A3]">Explain Mode Engine</Link></li>
-                <li><Link to="/about" className="hover:text-[#2A56A3]">Design System Spec</Link></li>
+                <li><Link to="/boards" className="hover:text-[#2A56A3]">ESP32 DevKit V1 Pinout</Link></li>
+                <li><Link to="/projects" className="hover:text-[#2A56A3]">Project Library</Link></li>
+                <li><Link to="/achievements" className="hover:text-[#2A56A3]">XP & Badges</Link></li>
               </ul>
+            </div>
+
+            <div>
+              <h4 className="font-['Barlow_Semi_Condensed'] text-xs font-bold uppercase tracking-wider text-[#18213D] mb-3">
+                Learning Rules
+              </h4>
+              <p className="text-xs text-[#5C6066] leading-relaxed">
+                Never misrepresent a visual demo as genuine firmware simulation. Master one complete journey on ESP32 DevKit V1.
+              </p>
             </div>
           </div>
 
           <div className="pt-8 border-t border-[#CEC0AD] flex flex-col sm:flex-row items-center justify-between text-xs text-[#5C6066] gap-4">
-            <p>© 2026 Onboard. Don't only show learners how to make a circuit work. Explain why it works.</p>
+            <p>© 2026 Onboard. Get onboard. Start building.</p>
             <div className="flex items-center gap-4">
               <span>Warm pale-orange editorial design system</span>
             </div>
@@ -182,4 +233,3 @@ export default function Layout() {
     </div>
   );
 }
-

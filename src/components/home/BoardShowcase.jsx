@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { boards } from '../../data/boards';
-import { Cpu, ArrowRight, Zap, CheckCircle2 } from 'lucide-react';
+import { Cpu, ArrowRight } from 'lucide-react';
 
 export default function BoardShowcase() {
   return (

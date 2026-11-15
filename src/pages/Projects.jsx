@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { experiments } from '../data/experiments';
-import { Clock, ArrowRight, CheckCircle2, ChevronDown, ChevronUp, Terminal, Layers } from 'lucide-react';
+import { Clock, ArrowRight, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function Projects() {
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');

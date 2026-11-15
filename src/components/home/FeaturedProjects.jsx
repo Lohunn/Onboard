@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { experiments } from '../../data/experiments';
-import { ArrowRight, Clock, Layers, Sparkles } from 'lucide-react';
+import { ArrowRight, Clock } from 'lucide-react';
 
 export default function FeaturedProjects() {
   const featured = experiments.slice(0, 3);
