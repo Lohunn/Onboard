@@ -25,12 +25,14 @@ import {
   Monitor,
   CheckCircle2,
   Circle,
+  Sparkles,
 } from 'lucide-react';
 
 import { boards } from '../data/boards';
 import { components } from '../data/components';
 import { experiments } from '../data/experiments';
 import Board3DViewer from '../components/3d/Board3DViewer';
+import AIMentorDrawer from '../components/mentor/AIMentorDrawer';
 import {
   runSimulation,
   parseFirmware,
@@ -209,6 +211,7 @@ export default function VirtualLab() {
   const [simDiagnostics, setSimDiagnostics] = useState([]);
   const [evidenceToken, setEvidenceToken] = useState(null);
   const [selectedExplainItem, setSelectedExplainItem] = useState(null);
+  const [isMentorOpen, setIsMentorOpen] = useState(false);
 
   // Setup Initial Nodes with photorealistic hardware
   const initialNodes = useMemo(() => {
@@ -1130,6 +1133,27 @@ export default function VirtualLab() {
           )}
         </div>
       </div>
+
+      {/* Floating AI Mentor Button */}
+      <button
+        onClick={() => setIsMentorOpen(!isMentorOpen)}
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#18213D] text-[#FAF4E9] shadow-xl hover:bg-[#2A56A3] border border-[#34436A] transition-all group font-['Barlow_Semi_Condensed'] text-sm font-bold"
+      >
+        <Sparkles className="w-4 h-4 text-[#C0652D] group-hover:rotate-12 transition-transform" />
+        <span>Ask AI Mentor</span>
+        {simDiagnostics.length > 0 && (
+          <span className="w-2 h-2 rounded-full bg-[#E02424] animate-ping" />
+        )}
+      </button>
+
+      {/* AI Mentor Drawer */}
+      <AIMentorDrawer
+        isOpen={isMentorOpen}
+        onClose={() => setIsMentorOpen(false)}
+        experimentId={currentExp.id}
+        diagnostics={simDiagnostics}
+        code={code}
+      />
     </div>
   );
 }
