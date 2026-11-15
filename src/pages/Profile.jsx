@@ -1,17 +1,45 @@
 import React, { useState } from 'react';
 import { useLearnerStore } from '../store/useLearnerStore';
-import { ShieldCheck, RotateCcw, Check, Sparkles } from 'lucide-react';
+import { ShieldCheck, RotateCcw, Check, Sparkles, Globe, Clock } from 'lucide-react';
+
+const COMMON_TIMEZONES = [
+  { label: 'UTC (Coordinated Universal Time)', value: 'UTC' },
+  { label: 'America/New_York (Eastern Time)', value: 'America/New_York' },
+  { label: 'America/Chicago (Central Time)', value: 'America/Chicago' },
+  { label: 'America/Denver (Mountain Time)', value: 'America/Denver' },
+  { label: 'America/Los_Angeles (Pacific Time)', value: 'America/Los_Angeles' },
+  { label: 'Europe/London (GMT/BST)', value: 'Europe/London' },
+  { label: 'Europe/Paris (CET)', value: 'Europe/Paris' },
+  { label: 'Asia/Kolkata (IST)', value: 'Asia/Kolkata' },
+  { label: 'Asia/Tokyo (JST)', value: 'Asia/Tokyo' },
+  { label: 'Australia/Sydney (AEST)', value: 'Australia/Sydney' },
+];
 
 export default function Profile() {
-  const { profile, xp, streakDays, completedLessonIds, updateDailyGoal, resetProgress } =
-    useLearnerStore();
+  const {
+    profile,
+    xp,
+    streakDays,
+    longestStreak,
+    completedLessonIds,
+    updateDailyGoal,
+    updateTimezone,
+    resetProgress,
+  } = useLearnerStore();
 
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [resetConfirm, setResetConfirm] = useState(false);
 
   const goalOptions = [5, 10, 15, 20];
 
   const handleGoalChange = (minutes) => {
     updateDailyGoal(minutes);
+    setSavedSuccess(true);
+    setTimeout(() => setSavedSuccess(false), 2000);
+  };
+
+  const handleTzChange = (e) => {
+    updateTimezone(e.target.value);
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2000);
   };
@@ -26,7 +54,7 @@ export default function Profile() {
           Profile & Preferences
         </h1>
         <p className="font-['Barlow'] text-base sm:text-lg text-[#4B505C] mt-2 leading-relaxed">
-          Manage your daily learning target, view completed milestones, and customize your beginner journey.
+          Manage your daily learning target, configure timezone for streak tracking, and customize your beginner journey.
         </p>
       </div>
 
@@ -54,7 +82,7 @@ export default function Profile() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
             <div className="bg-[#F9F2E5] p-4 rounded-[7px] border border-[#CEC0AD]">
               <div className="text-[11px] font-['Barlow_Semi_Condensed'] font-bold uppercase tracking-wider text-[#5C6066]">
-                Total Experience
+                Reconciled Experience
               </div>
               <div className="text-2xl font-['JetBrains_Mono'] font-bold text-[#2A56A3]">
                 {xp} XP
@@ -66,7 +94,7 @@ export default function Profile() {
                 Current Streak
               </div>
               <div className="text-2xl font-['JetBrains_Mono'] font-bold text-[#C0652D]">
-                {streakDays} Days
+                {streakDays} Days <span className="text-xs text-[#5C6066] font-normal">(Best: {longestStreak})</span>
               </div>
             </div>
 
@@ -81,23 +109,56 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* Timezone Preference Card */}
+        <div className="rounded-[9px] bg-[#FAF4E9] border border-[#CEC0AD] p-6 sm:p-8 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-['Barlow_Semi_Condensed'] text-xl font-bold text-[#18213D] flex items-center gap-2">
+                <Globe className="w-5 h-5 text-[#2A56A3]" />
+                Learner Timezone (Streak Accounting)
+              </h3>
+              <p className="font-['Barlow'] text-sm text-[#4B505C]">
+                Streaks are strictly evaluated using your local calendar date to ensure midnight boundaries match your real day.
+              </p>
+            </div>
+            {savedSuccess && (
+              <span className="inline-flex items-center gap-1 text-xs font-['Barlow_Semi_Condensed'] font-bold text-[#057A55] bg-[#057A55]/10 px-2 py-1 rounded-[5px]">
+                <Check className="w-3.5 h-3.5" />
+                Updated
+              </span>
+            )}
+          </div>
+
+          <div className="pt-2 max-w-md">
+            <label className="block text-xs font-['Barlow_Semi_Condensed'] font-bold uppercase tracking-wider text-[#5C6066] mb-1">
+              Active Timezone
+            </label>
+            <select
+              value={profile.timezone || 'UTC'}
+              onChange={handleTzChange}
+              className="w-full bg-[#FAF4E9] border border-[#CEC0AD] rounded-[7px] py-2 px-3 text-sm font-['JetBrains_Mono'] text-[#18213D] focus:outline-hidden focus:border-[#2A56A3]"
+            >
+              {COMMON_TIMEZONES.map((tz) => (
+                <option key={tz.value} value={tz.value}>
+                  {tz.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {/* Daily Goal Target */}
         <div className="rounded-[9px] bg-[#FAF4E9] border border-[#CEC0AD] p-6 sm:p-8 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-['Barlow_Semi_Condensed'] text-xl font-bold text-[#18213D]">
+              <h3 className="font-['Barlow_Semi_Condensed'] text-xl font-bold text-[#18213D] flex items-center gap-2">
+                <Clock className="w-5 h-5 text-[#C0652D]" />
                 Daily Learning Target
               </h3>
               <p className="font-['Barlow'] text-sm text-[#4B505C]">
                 Set a comfortable daily pace. Goals are motivational and never lock access.
               </p>
             </div>
-            {savedSuccess && (
-              <span className="inline-flex items-center gap-1 text-xs font-['Barlow_Semi_Condensed'] font-bold text-[#057A55] bg-[#057A55]/10 px-2 py-1 rounded-[5px]">
-                <Check className="w-3.5 h-3.5" />
-                Saved
-              </span>
-            )}
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
@@ -109,15 +170,17 @@ export default function Profile() {
                   onClick={() => handleGoalChange(mins)}
                   className={`p-3.5 rounded-[7px] border text-center transition-all ${
                     isSelected
-                      ? 'bg-[#18213D] text-[#FAF4E9] border-[#18213D] shadow-xs'
-                      : 'bg-[#F9F2E5] text-[#18213D] border-[#CEC0AD] hover:border-[#2A56A3]'
+                      ? 'bg-[#18213D] border-[#18213D] text-[#FAF4E9] shadow-xs'
+                      : 'bg-[#F9F2E5] border-[#CEC0AD] text-[#18213D] hover:bg-[#E3D8CA]'
                   }`}
                 >
-                  <div className="font-['JetBrains_Mono'] text-lg font-bold">
-                    {mins} min
-                  </div>
-                  <div className="text-[10px] font-['Barlow_Semi_Condensed'] font-semibold uppercase tracking-wider opacity-80">
-                    {mins === 5 ? 'Casual' : mins === 10 ? 'Standard' : mins === 15 ? 'Serious' : 'Intense'}
+                  <div className="font-['JetBrains_Mono'] text-xl font-bold">{mins} min</div>
+                  <div
+                    className={`text-xs font-['Barlow'] mt-0.5 ${
+                      isSelected ? 'text-[#FAF4E9]/80' : 'text-[#5C6066]'
+                    }`}
+                  >
+                    {mins === 5 ? 'Quick Dip' : mins === 10 ? 'Standard' : mins === 15 ? 'Solid Focus' : 'Deep Work'}
                   </div>
                 </button>
               );
@@ -125,31 +188,47 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Zero Hardware Guarantee Card */}
-        <div className="rounded-[9px] bg-[#E3D8CA] border border-[#CEC0AD] p-6 space-y-2">
-          <h3 className="font-['Barlow_Semi_Condensed'] text-lg font-bold text-[#18213D] flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#C0652D]" />
-            Physical Hardware is 100% Optional
-          </h3>
-          <p className="font-['Barlow'] text-xs text-[#4B505C] leading-relaxed">
-            The entire core curriculum, circuit construction, firmware execution, and quizzes are fully supported inside the in-browser Virtual Lab. You do not need to purchase an ESP32 or breadboard to complete the program.
-          </p>
-        </div>
+        {/* Reset Progress Section */}
+        <div className="rounded-[9px] bg-[#FAF4E9] border border-[#C0652D]/30 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="font-['Barlow_Semi_Condensed'] text-xl font-bold text-[#18213D] flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#C0652D]" />
+              Restart Learning Journey
+            </h3>
+            <p className="font-['Barlow'] text-sm text-[#4B505C] mt-1">
+              Reset completed lessons, streak count, and unlocked modules to review from scratch.
+            </p>
+          </div>
 
-        {/* Reset Progress Action */}
-        <div className="pt-4 flex justify-between items-center text-xs text-[#5C6066]">
-          <span>Reset your progress back to Module 0 for testing</span>
-          <button
-            onClick={() => {
-              if (window.confirm('Are you sure you want to reset all lesson progress and XP?')) {
-                resetProgress();
-              }
-            }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[5px] bg-[#FAF4E9] border border-[#CEC0AD] hover:bg-[#E02424]/10 hover:text-[#E02424] text-[#5C6066] font-['Barlow_Semi_Condensed'] font-bold transition-colors"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            Reset Progress
-          </button>
+          <div>
+            {resetConfirm ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    resetProgress();
+                    setResetConfirm(false);
+                  }}
+                  className="px-3.5 py-2 rounded-[7px] bg-[#C0652D] text-white text-xs font-['Barlow_Semi_Condensed'] font-bold uppercase tracking-wider hover:bg-[#A85422]"
+                >
+                  Confirm Reset
+                </button>
+                <button
+                  onClick={() => setResetConfirm(false)}
+                  className="px-3 py-2 rounded-[7px] border border-[#CEC0AD] text-xs font-['Barlow_Semi_Condensed'] font-semibold text-[#5C6066]"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setResetConfirm(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-[7px] border border-[#C0652D]/40 text-xs font-['Barlow_Semi_Condensed'] font-bold text-[#C0652D] uppercase tracking-wider hover:bg-[#C0652D]/10 transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Reset Progress
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
