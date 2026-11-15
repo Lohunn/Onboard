@@ -24,6 +24,7 @@ import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Board3DViewer from '../components/3d/Board3DViewer';
+import ESP32BoardExplorer from '../components/board/ESP32BoardExplorer';
 
 /**
  * Pin type to color mapping for the pinout diagram.
@@ -228,7 +229,15 @@ function SpecsGrid({ board }) {
 function PinoutSection({ board }) {
   const [selectedPin, setSelectedPin] = useState(null);
 
-  const pins = board.pins || [];
+  if (board.id === 'esp32-devkit-v1') {
+    return (
+      <section className="mb-16">
+        <ESP32BoardExplorer />
+      </section>
+    );
+  }
+
+  const pins = board.pinout || board.pins || [];
 
   // Split pins into left and right columns for the diagram
   const mid = Math.ceil(pins.length / 2);

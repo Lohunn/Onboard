@@ -10,6 +10,7 @@
     "test:curriculum": "node tests/curriculum.test.js",
     "test:lessons": "node tests/lessonEngine.test.js",
     "test:gamification": "node tests/gamification.test.js",
+    "test:board": "node tests/esp32Explorer.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
