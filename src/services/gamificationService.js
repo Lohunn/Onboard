@@ -116,7 +116,21 @@ export const ACHIEVEMENTS = [
     icon: '🏆',
     category: 'Milestones',
     xpReward: 75,
-    check: ({ completedModules }) => completedModules?.includes('mod-10-capstone'),
+    check: ({ completedModules, completedLessons }) =>
+      completedModules?.includes('mod-9-smart-indicator') ||
+      completedModules?.includes('mod-10-capstone') ||
+      completedLessons?.includes('lesson-9-final-mission'),
+  },
+  {
+    id: 'smart_indicator_master',
+    title: 'Smart Indicator Master',
+    description: 'Master physical computing by designing and verifying the Smart Indicator capstone project.',
+    icon: '🎖️',
+    category: 'Milestones',
+    xpReward: 100,
+    check: ({ verifiedExperiments, completedLessons }) =>
+      verifiedExperiments?.includes('exp-smart-indicator') ||
+      completedLessons?.includes('lesson-9-final-mission'),
   },
   {
     id: 'consistent_builder',

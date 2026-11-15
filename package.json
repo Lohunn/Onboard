@@ -15,6 +15,7 @@
     "test:sim": "node tests/simulatorAdapter.test.js",
     "test:button": "node tests/buttonExperiment.test.js",
     "test:mentor": "node tests/mentorService.test.js",
+    "test:capstone": "node tests/smartIndicator.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

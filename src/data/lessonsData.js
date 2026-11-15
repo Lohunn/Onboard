@@ -347,4 +347,153 @@ Resistor = 1.3V / 0.015A = 86.6 Ohms (Minimum)
       },
     ],
   },
+
+  // ─── Module 9 Capstone: Smart Indicator ───
+  'lesson-9-final-mission': {
+    id: 'lesson-9-final-mission',
+    moduleId: 'mod-9-smart-indicator',
+    title: 'Mission: The Smart Status Indicator',
+    summary:
+      'The beginner physical computing capstone mission: Combine digital input, active-low pull-up logic, current-limited LED output, and contact debouncing on ESP32 DevKit V1.',
+    estimatedMinutes: 20,
+    xpReward: 100,
+    schemaVersion: 1,
+    learningObjectives: [
+      'Integrate push button input and LED output into a synchronized embedded state machine',
+      'Implement active-low pull-up logic using pinMode(BUTTON_PIN, INPUT_PULLUP)',
+      'Protect the ESP32 GPIO from overcurrent using a 220Ω series resistor',
+      'Filter out mechanical switch contact bouncing using software delays',
+      'Earn the Smart Indicator Master capstone certification badge',
+    ],
+    blocks: [
+      {
+        id: 'blk-capstone-intro',
+        type: 'callout',
+        variant: 'tip',
+        title: 'Capstone Mission Briefing',
+        content:
+          'Welcome to your final beginner mission! You have explored voltage, current, resistance, ESP32 pinouts, digital outputs, and digital inputs. Now, you will combine all of them into a practical embedded status indicator that switches operational modes with every button press.',
+      },
+      {
+        id: 'blk-capstone-diagram',
+        type: 'diagram',
+        diagramType: 'circuit_schematic',
+        caption: 'Smart Indicator Complete Breadboard Topology',
+        data: {
+          nodes: [
+            { id: 'esp32', label: 'ESP32 DevKit V1' },
+            { id: 'btn', label: 'Push Button (GPIO 4 → GND)' },
+            { id: 'res', label: '220Ω Resistor' },
+            { id: 'led', label: 'Red Status LED (GPIO 2)' },
+          ],
+          connections: [
+            { from: 'esp32:d4', to: 'btn:pin1', label: 'Digital Input' },
+            { from: 'btn:pin2', to: 'esp32:gnd', label: 'Ground (Active Low)' },
+            { from: 'esp32:d2', to: 'res:pin1', label: 'Digital Output' },
+            { from: 'res:pin2', to: 'led:anode', label: 'Current Limited' },
+            { from: 'led:cathode', to: 'esp32:gnd', label: 'Return' },
+          ],
+        },
+      },
+      {
+        id: 'blk-capstone-code',
+        type: 'code_example',
+        language: 'cpp',
+        title: 'Complete Smart Indicator Firmware',
+        code: `const int BUTTON_PIN = 4;
+const int LED_PIN = 2;
+
+int systemMode = 0; // 0 = Standby, 1 = Solid ON, 2 = Heartbeat
+int lastButton = HIGH;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  int current = digitalRead(BUTTON_PIN);
+  if (current == LOW && lastButton == HIGH) {
+    systemMode = (systemMode + 1) % 3;
+    delay(50); // Debounce
+  }
+  lastButton = current;
+
+  if (systemMode == 0) digitalWrite(LED_PIN, LOW);
+  else if (systemMode == 1) digitalWrite(LED_PIN, HIGH);
+  else if (systemMode == 2) {
+    digitalWrite(LED_PIN, HIGH); delay(100);
+    digitalWrite(LED_PIN, LOW); delay(400);
+  }
+}`,
+      },
+      {
+        id: 'blk-capstone-hotspot',
+        type: 'hotspot',
+        title: 'Key Subsystems Inspection',
+        description:
+          'Click each hotspot to inspect why each circuit segment is structured this way.',
+        hotspots: [
+          {
+            id: 'hs-pullup',
+            label: 'INPUT_PULLUP Circuit',
+            description:
+              'By wiring the button between GPIO 4 and GND, the internal 45kΩ pull-up holds the pin at 3.3V until pressed.',
+            position: { x: 25, y: 35 },
+          },
+          {
+            id: 'hs-resistor',
+            label: 'Current Limiting Resistor',
+            description:
+              'A 220Ω resistor limits GPIO 2 current to safe levels (~6mA) per Ohm’s law (3.3V - 2.0V forward) / 220Ω.',
+            position: { x: 70, y: 35 },
+          },
+          {
+            id: 'hs-debounce',
+            label: 'Software Debounce',
+            description:
+              'A 50ms delay ignores microscopic mechanical contact flutter, preventing accidental double-mode skips.',
+            position: { x: 50, y: 75 },
+          },
+        ],
+      },
+      {
+        id: 'blk-capstone-quiz',
+        type: 'knowledge_check',
+        prompt:
+          'In the Smart Indicator firmware, why is the condition `current == LOW && lastButton == HIGH` used instead of simply `current == LOW`?',
+        options: [
+          {
+            id: 'kc-opt-1',
+            text: 'To detect the exact moment the button transitions from released to pressed, avoiding thousands of mode changes while holding it down.',
+            explanation:
+              'Spot on! This is edge detection. It only triggers once per physical button press.',
+          },
+          {
+            id: 'kc-opt-2',
+            text: 'Because the ESP32 processor cannot read LOW values more than once per minute.',
+            explanation:
+              'Incorrect. The ESP32 loop runs millions of times per second.',
+          },
+          {
+            id: 'kc-opt-3',
+            text: 'Because high voltage damages the button switch if checked repeatedly.',
+            explanation:
+              'Incorrect. 3.3V logic is completely safe for the switch contacts.',
+          },
+        ],
+        correctOptionId: 'kc-opt-1',
+        hint: 'What happens if you hold the button down for 2 seconds without checking the previous state?',
+      },
+      {
+        id: 'blk-capstone-congrats',
+        type: 'callout',
+        variant: 'tip',
+        title: 'Mission Complete — Physical Computing Certified!',
+        content:
+          'Congratulations! You have completed the Smart Indicator capstone. You are now equipped to design real-world embedded projects on the ESP32. Head to the Virtual Lab or Circuit Builder to experiment further!',
+      },
+    ],
+  },
 };

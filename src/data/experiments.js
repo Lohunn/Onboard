@@ -577,6 +577,124 @@ void loop() {
       },
     ],
   },
+  {
+    id: 'exp-smart-indicator',
+    slug: 'smart-status-indicator',
+    title: 'Capstone Mission: Smart Status Indicator',
+    tagline: 'Synthesize digital inputs, current-limited outputs, and state machines',
+    difficulty: 'Beginner Capstone (3/5)',
+    category: 'Capstone Mission',
+    boardId: 'esp32-devkit-v1',
+    compatibleBoards: ['esp32-devkit-v1'],
+    estimatedMinutes: 20,
+    simulationMode: 'simulated',
+    description:
+      'The beginner physical computing capstone mission: Combine an active-low push button, current-limiting resistor, and LED output into a robust 3-state system status indicator with software contact debouncing.',
+    learningObjectives: [
+      'Integrate digital inputs and outputs into a single cohesive embedded system',
+      'Implement finite state-machine mode switching using modulo arithmetic',
+      'Prevent mechanical switch contact bounce with timing filters',
+      'Transmit real-time telemetry logs over serial to monitor state transitions',
+      'Earn the Smart Indicator Master capstone certification badge',
+    ],
+    componentsNeeded: [
+      { id: 'esp32-devkit-v1', name: 'ESP32 DevKit V1', quantity: 1 },
+      { id: 'push-button', name: '6mm Push Button', quantity: 1 },
+      { id: 'resistor-220', name: '220Ω Resistor', quantity: 1 },
+      { id: 'led-red', name: 'Red LED 5mm', quantity: 1 },
+      { id: 'breadboard-half', name: 'Half-size Breadboard', quantity: 1 },
+    ],
+    wiring: [
+      { from: 'Button Pin 1A', to: 'ESP32 GPIO 4', color: '#057A55', label: 'Mode Switch Input' },
+      { from: 'Button Pin 2A', to: 'ESP32 GND', color: '#18213D', label: 'Ground Return' },
+      { from: 'ESP32 GPIO 2', to: 'Resistor (Pin 1)', color: '#2A56A3', label: 'Status Output' },
+      { from: 'Resistor (Pin 2)', to: 'LED Anode', color: '#C0652D', label: 'Current Limited' },
+      { from: 'LED Cathode', to: 'ESP32 GND', color: '#18213D', label: 'Ground Return' },
+    ],
+    starterCode: `// Capstone Mission: Smart Status Indicator
+// Onboard Physical Computing Certification
+
+const int BUTTON_PIN = 4; // Push button input
+const int LED_PIN = 2;    // Status indicator LED
+
+// Indicator modes: 0 = OFF, 1 = SOLID_ON, 2 = HEARTBEAT_BLINK
+int systemMode = 0;
+int lastButtonState = HIGH;
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Configure button with internal pull-up and LED as digital output
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+  
+  Serial.println("Smart Indicator System Online. Mode: 0 (STANDBY)");
+}
+
+void loop() {
+  int currentButton = digitalRead(BUTTON_PIN);
+  
+  // Detect active-low button press transition (HIGH -> LOW)
+  if (currentButton == LOW && lastButtonState == HIGH) {
+    systemMode = (systemMode + 1) % 3;
+    Serial.print("Mode Changed: ");
+    Serial.println(systemMode);
+    delay(50); // Debounce delay
+  }
+  lastButtonState = currentButton;
+  
+  // Execute state indicator behavior
+  if (systemMode == 0) {
+    // Mode 0: Standby (OFF)
+    digitalWrite(LED_PIN, LOW);
+  } else if (systemMode == 1) {
+    // Mode 1: Active Alert (SOLID ON)
+    digitalWrite(LED_PIN, HIGH);
+  } else if (systemMode == 2) {
+    // Mode 2: Heartbeat Pulse
+    digitalWrite(LED_PIN, HIGH);
+    delay(100);
+    digitalWrite(LED_PIN, LOW);
+    delay(400);
+  }
+}
+`,
+    expectedResult:
+      'Each button click cycles the system through 3 distinct status modes: Standby (OFF), Active (Solid ON), and Heartbeat Pulse. The serial console logs each mode change in real-time.',
+    commonMistakes: [
+      'Missing software debounce: Mechanical contacts bounce for ~5ms on press, triggering multiple state transitions per click without a debounce delay.',
+      'Floating input wire: Leaving the button pin without INPUT_PULLUP creates noisy false triggers.',
+    ],
+    explainMap: {
+      'systemMode = (systemMode + 1) % 3': {
+        concept: 'Cyclic State Machine',
+        text: 'The modulo operator (%) wraps the integer within 0, 1, and 2, cycling continuously on every click.',
+      },
+      'pinMode(BUTTON_PIN, INPUT_PULLUP)': {
+        concept: 'Internal Pull-Up Resistor',
+        text: 'Engages the ESP32 internal 45kΩ pull-up resistor to hold the pin at 3.3V until pressed to Ground.',
+      },
+    },
+    challenge: {
+      title: 'Emergency Strobe Mode',
+      description: 'Add a 4th mode (systemMode = 3) that rapidly flashes the LED at 50ms intervals as an emergency beacon.',
+      hint: 'Change modulo divisor to 4: systemMode = (systemMode + 1) % 4, and add an else-if branch.',
+    },
+    quiz: [
+      {
+        question: 'What is contact bounce in a mechanical push button switch?',
+        options: [
+          'The button physically popping out of the breadboard',
+          'Microscopic metal contacts vibrating rapidly during closure, creating false electrical pulses',
+          'Reverse electrical current feeding back into the 3V3 power supply',
+          'Thermal expansion of copper jumper wires',
+        ],
+        correctIndex: 1,
+        explanation:
+          'When mechanical contacts touch, springs and metal flex microscopic times within 1-10ms before settling. Software debounce filters out these phantom pulses.',
+      },
+    ],
+  },
 ]
 
 export default experiments

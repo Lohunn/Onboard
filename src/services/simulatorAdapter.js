@@ -1000,7 +1000,10 @@ export function runButtonSimulation({
  * @returns {object} SimulationResult
  */
 export function runSimulation(params) {
-  if (params.experimentId === 'exp-02-button') {
+  if (
+    params.experimentId === 'exp-02-button' ||
+    params.experimentId === 'exp-smart-indicator'
+  ) {
     return runButtonSimulation(params);
   }
   return runLedSimulation(params);
