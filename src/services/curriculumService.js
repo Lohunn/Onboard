@@ -10,7 +10,9 @@ export const ZERO_TO_ESP32_PATH = {
   title: 'Electronics Zero-to-ESP32',
   tagline: 'From zero knowledge to your first microcontroller project',
   boardVariant: 'esp32-devkit-v1',
+  boardName: 'ESP32 DevKit V1',
   estimatedHours: '3.5 - 5.0 hours',
+  totalModules: 11,
   modules: [
     {
       id: 'mod-0-welcome',
@@ -18,6 +20,14 @@ export const ZERO_TO_ESP32_PATH = {
       title: '0. Welcome to building',
       description: 'What is electronics? What is a circuit? What is a microcontroller? What will we build together?',
       checkpointTitle: 'Checkpoint: Circuit or Broken Loop?',
+      prerequisiteModuleId: null,
+      icon: 'Sparkles',
+      accentColor: '#2A56A3',
+      learningOutcomes: [
+        'Distinguish between an electrical conductor, insulator, and circuit',
+        'Identify what a microcontroller chip does inside consumer tech',
+        'Form the habit of predicting circuit behavior before testing',
+      ],
       lessons: [
         {
           id: 'lesson-0-welcome',
@@ -27,6 +37,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 5,
           xpReward: 20,
           type: 'concept',
+          objectives: ['Understand how Onboard teaches', 'Confirm no hardware is needed'],
         },
         {
           id: 'lesson-0-circuit-intro',
@@ -36,6 +47,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 6,
           xpReward: 20,
           type: 'interactive',
+          objectives: ['Define an electrical loop', 'Predict if current will flow'],
         },
         {
           id: 'lesson-0-mcu-intro',
@@ -45,6 +57,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 7,
           xpReward: 20,
           type: 'concept',
+          objectives: ['Compare a computer CPU with an MCU', 'Identify the ESP32 chip'],
         },
       ],
     },
@@ -54,6 +67,14 @@ export const ZERO_TO_ESP32_PATH = {
       title: '1. Electricity without fear',
       description: 'Voltage, current, resistance, open vs closed circuits, and why LEDs always need resistors.',
       checkpointTitle: 'Checkpoint: Choose the Safe LED Circuit',
+      prerequisiteModuleId: 'mod-0-welcome',
+      icon: 'Zap',
+      accentColor: '#C0652D',
+      learningOutcomes: [
+        'Understand voltage (potential) and current (flow)',
+        "Use Ohm's Law intuitively (V = I * R)",
+        'Explain why LEDs blow up without current-limiting resistors',
+      ],
       lessons: [
         {
           id: 'lesson-1-voltage-current',
@@ -63,6 +84,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 8,
           xpReward: 20,
           type: 'concept',
+          objectives: ['Define Volts and Amperes', 'Understand electrical potential difference'],
         },
         {
           id: 'lesson-1-resistance',
@@ -72,6 +94,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 7,
           xpReward: 20,
           type: 'interactive',
+          objectives: ['Calculate resistor values for LEDs', 'Identify forward voltage'],
         },
       ],
     },
@@ -81,6 +104,14 @@ export const ZERO_TO_ESP32_PATH = {
       title: '2. Meet the components',
       description: 'Breadboard layout, jumper wires, LED polarity, resistors, buttons, and potentiometers.',
       checkpointTitle: 'Checkpoint: Breadboard Continuity Test',
+      prerequisiteModuleId: 'mod-1-electricity',
+      icon: 'Layers',
+      accentColor: '#057A55',
+      learningOutcomes: [
+        'Navigate the internal tie-strips and rails of a solderless breadboard',
+        'Identify anode (+) and cathode (-) legs of a diode',
+        'Select tactile switches and resistors with confidence',
+      ],
       lessons: [
         {
           id: 'lesson-2-breadboard',
@@ -90,6 +121,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 6,
           xpReward: 20,
           type: 'hotspot',
+          objectives: ['Understand 5-hole terminal rows', 'Trace positive and ground power rails'],
         },
         {
           id: 'lesson-2-led-polarity',
@@ -99,6 +131,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 6,
           xpReward: 20,
           type: 'interactive',
+          objectives: ['Locate the flat edge on 5mm LEDs', 'Wire the diode in the correct direction'],
         },
       ],
     },
@@ -108,6 +141,14 @@ export const ZERO_TO_ESP32_PATH = {
       title: '3. Meet the ESP32',
       description: 'Microcontroller board anatomy, USB bridge, power rails (3.3V/VIN), GND, GPIO, and safety limits.',
       checkpointTitle: 'Checkpoint: Find the Safe GPIO Pins',
+      prerequisiteModuleId: 'mod-2-components',
+      icon: 'Cpu',
+      accentColor: '#18213D',
+      learningOutcomes: [
+        'Locate power pins (3V3, VIN, GND) on the ESP32 DevKit V1',
+        'Identify general-purpose I/O vs strapping and input-only pins',
+        'Safeguard the 3.3V logic level from 5V overvoltage',
+      ],
       lessons: [
         {
           id: 'lesson-3-anatomy',
@@ -117,6 +158,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 8,
           xpReward: 20,
           type: 'hotspot',
+          objectives: ['Identify on-board crystal and USB chip', 'Understand power input options'],
         },
         {
           id: 'lesson-3-pins',
@@ -126,6 +168,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 8,
           xpReward: 20,
           type: 'concept',
+          objectives: ['Recognize ADC1 vs ADC2 pins', 'Avoid strapping pin boot errors'],
         },
       ],
     },
@@ -135,6 +178,14 @@ export const ZERO_TO_ESP32_PATH = {
       title: '4. First output: LED blink',
       description: 'Digital output signals, HIGH/LOW logic states, GPIO configuration, and the blink timing loop.',
       checkpointTitle: 'Guided Experiment: First Virtual Blink',
+      prerequisiteModuleId: 'mod-3-esp32',
+      icon: 'Lightbulb',
+      accentColor: '#2A56A3',
+      learningOutcomes: [
+        'Configure GPIO pins as outputs using pinMode()',
+        'Drive pins to 3.3V and 0V with digitalWrite()',
+        'Control execution pacing with delay()',
+      ],
       lessons: [
         {
           id: 'lesson-4-digital-signals',
@@ -144,6 +195,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 6,
           xpReward: 20,
           type: 'concept',
+          objectives: ['Understand 1 and 0 binary logic', 'Visualize square voltage waves'],
         },
         {
           id: 'lesson-4-blink-build',
@@ -154,6 +206,7 @@ export const ZERO_TO_ESP32_PATH = {
           xpReward: 30,
           type: 'lab',
           experimentId: 'exp-01-blink',
+          objectives: ['Build circuit on virtual breadboard', 'Run simulation and verify LED blinks'],
         },
       ],
     },
@@ -163,6 +216,14 @@ export const ZERO_TO_ESP32_PATH = {
       title: '5. First input: button',
       description: 'Reading inputs, mechanical tactile switches, pull-up vs pull-down resistors, and floating pins.',
       checkpointTitle: 'Guided Experiment: Button-Controlled LED',
+      prerequisiteModuleId: 'mod-4-led-blink',
+      icon: 'Square',
+      accentColor: '#C0652D',
+      learningOutcomes: [
+        'Read digital states using digitalRead()',
+        'Eliminate floating inputs using internal pull-up resistors',
+        'Implement active-low switch logic',
+      ],
       lessons: [
         {
           id: 'lesson-5-floating-pins',
@@ -172,6 +233,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 7,
           xpReward: 20,
           type: 'concept',
+          objectives: ['Define high-impedance inputs', 'Explain pull-up resistors'],
         },
         {
           id: 'lesson-5-button-build',
@@ -182,6 +244,7 @@ export const ZERO_TO_ESP32_PATH = {
           xpReward: 30,
           type: 'lab',
           experimentId: 'exp-02-button',
+          objectives: ['Wire switch with ground reference', 'Write conditional if/else code'],
         },
       ],
     },
@@ -191,6 +254,14 @@ export const ZERO_TO_ESP32_PATH = {
       title: '6. Read the analogue world',
       description: 'Continuous voltages, Analog-to-Digital Converters (ADC), potentiometers, and voltage dividers.',
       checkpointTitle: 'Guided Experiment: Read Rotary Potentiometer',
+      prerequisiteModuleId: 'mod-5-button-input',
+      icon: 'Sliders',
+      accentColor: '#057A55',
+      learningOutcomes: [
+        'Understand continuous analog reality vs discrete digital binary',
+        'Read 12-bit values (0-4095) with analogRead()',
+        'Wire rotary potentiometers as adjustable voltage dividers',
+      ],
       lessons: [
         {
           id: 'lesson-6-adc-concepts',
@@ -200,6 +271,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 8,
           xpReward: 20,
           type: 'concept',
+          objectives: ['Understand 12-bit quantization', 'Convert ADC counts to Volts'],
         },
         {
           id: 'lesson-6-pot-build',
@@ -210,6 +282,7 @@ export const ZERO_TO_ESP32_PATH = {
           xpReward: 30,
           type: 'lab',
           experimentId: 'exp-03-potentiometer',
+          objectives: ['Wire 3-terminal potentiometer', 'Map sensor values to delays'],
         },
       ],
     },
@@ -219,6 +292,13 @@ export const ZERO_TO_ESP32_PATH = {
       title: '7. Control brightness with PWM',
       description: 'Pulse Width Modulation, duty cycles, LED dimming, and pseudo-analog outputs.',
       checkpointTitle: 'Challenge: Build an LED Dimmer',
+      prerequisiteModuleId: 'mod-6-analogue-world',
+      icon: 'Activity',
+      accentColor: '#2A56A3',
+      learningOutcomes: [
+        'Simulate analog voltages using high-speed digital pulsing',
+        'Calculate duty cycles from 0% (off) to 100% (full brightness)',
+      ],
       lessons: [
         {
           id: 'lesson-7-pwm-duty-cycle',
@@ -228,6 +308,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 7,
           xpReward: 20,
           type: 'interactive',
+          objectives: ['Define duty cycle percentage', 'Control LED dimming'],
         },
       ],
     },
@@ -237,6 +318,13 @@ export const ZERO_TO_ESP32_PATH = {
       title: '8. Debugging fundamentals',
       description: 'One change at a time, common wiring blunders, reversed diodes, floating grounds, and syntax errors.',
       checkpointTitle: 'Bug Hunt: Fix 3 Broken Circuits',
+      prerequisiteModuleId: 'mod-7-pwm-dimmer',
+      icon: 'AlertCircle',
+      accentColor: '#C0652D',
+      learningOutcomes: [
+        'Isolate errors methodically: power -> ground -> signal -> code',
+        'Read serial compiler diagnostics without panic',
+      ],
       lessons: [
         {
           id: 'lesson-8-troubleshooting-method',
@@ -246,6 +334,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 8,
           xpReward: 20,
           type: 'interactive',
+          objectives: ['Apply binary search troubleshooting', 'Fix seeded wiring mistakes'],
         },
       ],
     },
@@ -255,6 +344,13 @@ export const ZERO_TO_ESP32_PATH = {
       title: '9. Smart Indicator mission',
       description: 'Final beginner mission: combine button inputs, LED outputs, debounce timing, and serial telemetry.',
       checkpointTitle: 'Final Mission: Smart Indicator',
+      prerequisiteModuleId: 'mod-8-debugging',
+      icon: 'Award',
+      accentColor: '#057A55',
+      learningOutcomes: [
+        'Build a multi-component interactive embedded project from scratch',
+        'Combine digital inputs and outputs with state memory',
+      ],
       lessons: [
         {
           id: 'lesson-9-final-mission',
@@ -264,6 +360,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 20,
           xpReward: 75,
           type: 'mission',
+          objectives: ['Wire button & LED with resistors', 'Implement state latch in firmware'],
         },
       ],
     },
@@ -273,6 +370,13 @@ export const ZERO_TO_ESP32_PATH = {
       title: '10. Optional real hardware',
       description: 'Exact compatible ESP32 board list, breadboards, jumper wires, safety rules, and physical setup.',
       checkpointTitle: 'Physical Lab Companion Guide',
+      prerequisiteModuleId: 'mod-9-smart-indicator',
+      icon: 'ShieldCheck',
+      accentColor: '#18213D',
+      learningOutcomes: [
+        'Source exact verified ESP32 DevKit V1 hardware',
+        'Avoid USB overcurrent when connecting to a real computer',
+      ],
       lessons: [
         {
           id: 'lesson-10-hardware-guide',
@@ -282,6 +386,7 @@ export const ZERO_TO_ESP32_PATH = {
           durationMinutes: 10,
           xpReward: 30,
           type: 'hardware',
+          objectives: ['Identify physical board markers', 'Safe USB hookup instructions'],
         },
       ],
     },
@@ -289,17 +394,62 @@ export const ZERO_TO_ESP32_PATH = {
 };
 
 /**
- * Calculates learning map node status based on completed lesson IDs.
- * Status: 'locked' | 'available' | 'in_progress' | 'completed' | 'mastered'
+ * Computes the state of a single module.
+ * State: 'locked' | 'available' | 'in_progress' | 'completed' | 'mastered'
  */
 export function getModuleState(module, completedLessonIds, unlockedModuleIds) {
-  const isUnlocked = unlockedModuleIds.includes(module.id);
-  if (!isUnlocked) return 'locked';
+  // If not unlocked by prerequisites, it's locked
+  if (module.prerequisiteModuleId && !unlockedModuleIds.includes(module.id)) {
+    return 'locked';
+  }
 
-  const totalLessons = module.lessons.length;
-  const completedCount = module.lessons.filter((l) => completedLessonIds.includes(l.id)).length;
+  const lessonIds = module.lessons.map((l) => l.id);
+  const completedCount = lessonIds.filter((id) => completedLessonIds.includes(id)).length;
 
-  if (completedCount === totalLessons) return 'completed';
-  if (completedCount > 0) return 'in_progress';
+  if (completedCount === lessonIds.length) {
+    return 'completed';
+  }
+
+  if (completedCount > 0) {
+    return 'in_progress';
+  }
+
   return 'available';
+}
+
+/**
+ * Validates prerequisites and returns array of unlocked module IDs.
+ */
+export function calculateUnlockedModules(completedLessonIds) {
+  const unlocked = ['mod-0-welcome'];
+
+  for (let i = 0; i < ZERO_TO_ESP32_PATH.modules.length; i++) {
+    const mod = ZERO_TO_ESP32_PATH.modules[i];
+    const prevMod = i > 0 ? ZERO_TO_ESP32_PATH.modules[i - 1] : null;
+
+    if (prevMod) {
+      const prevCompleted = prevMod.lessons.every((l) => completedLessonIds.includes(l.id));
+      if (prevCompleted && !unlocked.includes(mod.id)) {
+        unlocked.push(mod.id);
+      }
+    }
+  }
+
+  return unlocked;
+}
+
+/**
+ * Finds the learner's next active lesson.
+ */
+export function findNextActiveLesson(completedLessonIds) {
+  for (const mod of ZERO_TO_ESP32_PATH.modules) {
+    for (const lesson of mod.lessons) {
+      if (!completedLessonIds.includes(lesson.id)) {
+        return { lesson, module: mod };
+      }
+    }
+  }
+  // All completed
+  const lastMod = ZERO_TO_ESP32_PATH.modules[ZERO_TO_ESP32_PATH.modules.length - 1];
+  return { lesson: lastMod.lessons[lastMod.lessons.length - 1], module: lastMod };
 }
