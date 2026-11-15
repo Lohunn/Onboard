@@ -22,6 +22,7 @@ export default function Layout() {
   const navLinks = [
     { label: 'Learn', path: '/learn' },
     { label: 'Virtual Lab', path: '/lab' },
+    { label: 'Circuit Builder', path: '/circuit' },
     { label: 'Boards', path: '/boards' },
     { label: 'Projects', path: '/projects' },
     { label: 'Achievements', path: '/achievements' },

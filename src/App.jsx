@@ -12,6 +12,7 @@ import Achievements from './pages/Achievements';
 import Profile from './pages/Profile';
 import VirtualLab from './pages/VirtualLab';
 import LessonPlayer from './pages/LessonPlayer';
+import CircuitBuilderPage from './pages/CircuitBuilderPage';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="boards/:boardId" element={<BoardDetail />} />
             <Route path="learn" element={<Learn />} />
             <Route path="lessons/:lessonId" element={<LessonPlayer />} />
+            <Route path="circuit" element={<CircuitBuilderPage />} />
             <Route path="projects" element={<Projects />} />
             <Route path="about" element={<About />} />
             <Route path="achievements" element={<Achievements />} />
